@@ -166,6 +166,131 @@ Esta función usa una **lista como pila** (`.pop()` sin índice saca el último 
 
 ---
 
+---
+
+## Parte 3 — El juego "adivina el número" (intuición de búsqueda en árbol)
+
+Antes de hablar de "árbol binario de búsqueda", juega este juego mentalmente: alguien piensa un número del 1 al 100, y tú solo puedes preguntar "¿es más grande o más chico que X?". La estrategia que ya usas sin que nadie te la enseñe es **partir el rango a la mitad en cada pregunta** — eso es, literalmente, cómo busca un árbol binario de búsqueda.
+
+```python
+def adivina_numero(secreto, minimo=1, maximo=100):
+    intentos = 0
+    historial = []
+    while True:
+        intentos += 1
+        intento = (minimo + maximo) // 2
+        historial.append(intento)
+        if intento == secreto:
+            return intentos, historial
+        elif intento < secreto:
+            minimo = intento + 1
+        else:
+            maximo = intento - 1
+
+secreto = 73
+intentos, historial = adivina_numero(secreto)
+print(f"Número secreto: {secreto}")
+print(f"Intentos para adivinar: {intentos}")
+print(f"Historial de intentos: {historial}")
+```
+
+**Salida real:**
+
+```
+Número secreto: 73
+Intentos para adivinar: 6
+Historial de intentos: [50, 75, 62, 68, 71, 73]
+```
+
+Ahora compáralo contra la estrategia "boba" — probar uno por uno desde el 1, que es exactamente lo que haría buscar en una lista sin ordenar un árbol detrás:
+
+```python
+def adivina_uno_por_uno(secreto, minimo=1, maximo=100):
+    intentos = 0
+    for intento in range(minimo, maximo + 1):
+        intentos += 1
+        if intento == secreto:
+            return intentos
+    return intentos
+
+intentos_lineales = adivina_uno_por_uno(secreto)
+print(f"Intentos necesarios probando uno por uno desde 1: {intentos_lineales}")
+```
+
+**Salida real:**
+
+```
+Intentos necesarios probando uno por uno desde 1: 73
+```
+
+**6 preguntas contra 73 intentos** para adivinar el mismo número. Esta es la razón de ser completa del Árbol Binario de Búsqueda que vas a construir en la práctica 02: cada nodo que visitas descarta la mitad de lo que queda, igual que cada pregunta de este juego descarta la mitad del rango.
+
+**Ejercicio para ti:** cambia `secreto = 73` por `secreto = 1` y por `secreto = 100` (los casos extremos) y corre `adivina_numero` de nuevo. ¿Cuántos intentos toma cada caso? ¿Por qué nunca pasa de 7 intentos sin importar qué número elijas entre 1 y 100? (pista: ¿cuántas veces puedes partir 100 a la mitad antes de llegar a 1?)
+
+---
+
+## Parte 4 — Un grafo dirigido real: "quién sigue a quién"
+
+En la Parte 2 viste amistades donde si Ana conoce a Beto, Beto también conoce a Ana — una arista **no dirigida**. Pero en una red social, seguir a alguien no implica que te sigan de vuelta. Eso es una arista **dirigida**, y cambia las preguntas que puedes hacer.
+
+```python
+seguidores = {
+    "Ana":   ["Beto"],
+    "Beto":  ["Caro", "Dani"],
+    "Caro":  ["Ana"],
+    "Dani":  ["Beto"],
+}
+
+def es_mutuo(grafo, a, b):
+    return b in grafo.get(a, []) and a in grafo.get(b, [])
+
+pares = [("Ana", "Beto"), ("Caro", "Ana"), ("Beto", "Dani")]
+for a, b in pares:
+    print(f"{a} <-> {b}: {es_mutuo(seguidores, a, b)}")
+```
+
+**Salida real:**
+
+```
+Ana <-> Beto: False
+Caro <-> Ana: False
+Beto <-> Dani: True
+```
+
+Fíjate: Ana sigue a Beto, pero Beto no sigue a Ana — **no mutuo**. Lo mismo entre Caro y Ana: Caro sigue a Ana, pero no al revés. Solo Beto y Dani se siguen en ambos sentidos. En un grafo no dirigido esta pregunta no tendría sentido (toda conexión ya es automáticamente "mutua"); en uno dirigido es información real que tienes que calcular.
+
+Ahora la pregunta que de verdad le interesa a una red social — "si sigo la cadena de seguidos de mis seguidos, a quién llego eventualmente" (la base de "sugerencias de a quién seguir"):
+
+```python
+def seguidos_en_cadena(grafo, inicio, pasos):
+    actuales = {inicio}
+    for paso in range(pasos):
+        siguientes = set()
+        for persona in actuales:
+            siguientes.update(grafo.get(persona, []))
+        actuales = siguientes
+        print(f"  Paso {paso+1}: {sorted(actuales) if actuales else '(nadie nuevo)'}")
+    return actuales
+
+print("A quién llega Ana siguiendo la cadena, paso a paso:")
+resultado = seguidos_en_cadena(seguidores, "Ana", 3)
+```
+
+**Salida real:**
+
+```
+A quién llega Ana siguiendo la cadena, paso a paso:
+  Paso 1: ['Beto']
+  Paso 2: ['Caro', 'Dani']
+  Paso 3: ['Ana', 'Beto']
+```
+
+En el paso 3, la cadena **regresa a Ana** — un ciclo dirigido (Ana→Beto→Dani→Beto... en realidad vía Caro→Ana). Esto es exactamente el patrón de BFS "por niveles" que vas a formalizar en la práctica 02: en cada paso exploras un nivel completo de vecinos antes de avanzar al siguiente, acumulando en un conjunto (`set`) para no procesar al mismo dos veces.
+
+**Ejercicio para ti:** agrega a `seguidores` una persona "Eva" que sigue a "Ana" pero a quien nadie sigue de vuelta. Corre `es_mutuo(seguidores, "Eva", "Ana")` y `seguidos_en_cadena(seguidores, "Eva", 3)` — ¿a quién llega Eva seguir la cadena, si ella es la única que empieza desde ahí?
+
+---
+
 ## Qué llevarte de esta práctica antes de seguir
 
 | | Árbol (`familia`) | Grafo (`amistades`) |
