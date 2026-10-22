@@ -7,6 +7,29 @@
 
 Hasta la Unidad 3 viste estructuras **lineales**: cada elemento tiene un predecesor y un sucesor claro (pila, cola, lista). En esta unidad entras a las estructuras **no lineales**: un elemento puede conectarse con varios otros a la vez. Dos ejemplos cubren casi todo lo que necesitas: el **árbol** (conexiones jerárquicas, sin ciclos) y el **grafo** (conexiones libres, con o sin ciclos).
 
+## Antes de empezar: dos imágenes mentales
+
+**Un árbol es como el organigrama de una empresa.** Hay un director general (la raíz), que tiene gerentes a su cargo (hijos), que a su vez tienen empleados a su cargo (nietos). Nadie le reporta a dos jefes a la vez, y no hay forma de que un empleado termine siendo, por una cadena de mandos, jefe de su propio jefe (eso sería un ciclo — y en un árbol **no existen los ciclos**).
+
+**Un grafo es como un mapa de carreteras.** Durango se conecta con Torreón y con Mazatlán. Torreón se conecta con Saltillo. Pero también podrías ir de Saltillo de regreso a Torreón, y de ahí otra vez a Durango — nada prohíbe "dar la vuelta". Un mapa no tiene una única ciudad "de arriba": todas las ciudades están al mismo nivel, conectadas entre sí como les convenga a los ingenieros que trazaron las carreteras.
+
+Esa es la diferencia completa entre los dos: el árbol tiene una jerarquía estricta y nunca regresas sobre tus pasos; el grafo no tiene jerarquía y sí puedes regresar.
+
+```
+ÁRBOL (organigrama)                 GRAFO (mapa de carreteras)
+
+        Director                     Durango ---- Torreon
+        /      \                        \            |
+    Gerente   Gerente                    \           |
+     /   \       \                     Mazatlan   Saltillo
+ Emp.   Emp.    Emp.                       \          /
+                                            Culiacan--Monterrey
+
+Un solo camino del Director       Puedes ir y venir entre ciudades,
+a cualquier empleado.             e incluso formar un circuito cerrado
+Nunca hay vuelta atrás.           (Durango-Torreon-Saltillo-...-Durango).
+```
+
 ---
 
 ## Parte 1 — Árboles binarios
@@ -155,6 +178,20 @@ Buscar 60: (True, 3)
 Buscar 65: (False, 3)
 ```
 
+Así quedó el árbol en memoria después de las 8 inserciones — es exactamente lo que dice `nivel_por_nivel()`:
+
+```
+                    50
+                  /    \
+               30        70
+              /  \      /  \
+            20    40  60    80
+            /
+          10
+```
+
+Para ubicar visualmente cómo trabaja `buscar(60)`: empieza en 50 (60 > 50, va a la derecha), llega a 70 (60 < 70, va a la izquierda), llega a 60 (coincide) — 3 pasos, siguiendo siempre **una sola rama** hacia abajo, nunca revisa el lado contrario.
+
 Fíjate: **inorden entregó los 8 valores perfectamente ordenados**, sin que nadie los ordenara explícitamente — es una propiedad automática del ABB. Y buscar el 60 tomó solo 3 pasos de 8 posibles.
 
 Ahora el experimento que justifica por qué "balanceado" no es un detalle cosmético — insertamos los **mismos 8 valores**, pero ya ordenados de entrada:
@@ -178,6 +215,32 @@ Buscar 80 en balanceado: (True, 3)
 ```
 
 Mismos 8 valores, mismo contenido — pero buscar el 80 tomó **8 pasos en el degenerado contra 3 en el balanceado**. El degenerado se convirtió en una lista ligada: insertar datos ya ordenados en un ABB simple (sin rebalanceo automático) es el peor caso posible. Por eso existen variantes como AVL o árboles rojo-negro, que rebalancean solos — quedan fuera del alcance de esta materia, pero ahora entiendes **por qué existen**.
+
+Así se ve la diferencia lado a lado — el mismo contenido, dos formas radicalmente distintas:
+
+```
+BALANCEADO (altura 3)                DEGENERADO (altura 7)
+
+        50                            10
+      /    \                            \
+   30        70                          20
+  /  \      /  \                           \
+20    40  60    80                          30
+/                                              \
+10                                              40
+                                                   \
+                                                    50
+                                                       \
+                                                        60
+                                                           \
+                                                            70
+                                                               \
+                                                                80
+
+3 saltos como máximo               Hasta 8 saltos: cada nodo tiene
+entre la raíz y cualquier hoja.    un solo hijo — es una lista ligada
+                                   con forma de árbol.
+```
 
 ### 1.5 Aplicaciones de árboles (4.1)
 
@@ -226,6 +289,12 @@ class Grafo:
 - **Grafo no dirigido**: la conexión va en ambos sentidos (una carretera se recorre en los dos sentidos).
 - **Grafo dirigido**: la conexión tiene un solo sentido (seguir a alguien en redes sociales no implica que te sigan de vuelta).
 - **Peso**: un valor asociado a la arista (distancia en km, costo, tiempo). Un grafo sin peso asume que todas las conexiones "cuestan" lo mismo.
+
+### Antes de ver el algoritmo: qué es un "heap" y por qué Dijkstra lo necesita
+
+Dijkstra, abajo, usa `import heapq`. Un **heap** (montículo) es una estructura que mantiene siempre accesible, en `O(1)`, **el elemento más pequeño** que contiene, sin tener que ordenar toda la colección cada vez que agregas algo nuevo. `heapq.heappush` mete un elemento manteniendo esa propiedad; `heapq.heappop` saca siempre el más pequeño.
+
+¿Para qué le sirve a Dijkstra? El algoritmo necesita, en cada paso, visitar la ciudad **más cercana que todavía no ha explorado** — sin un heap tendrías que revisar manualmente todas las distancias pendientes cada vez (lento); con un heap, pedirlo es instantáneo. Es la misma idea que una cola, pero en vez de "el que llegó primero" (FIFO), es "el que tiene el valor más chico" — por eso a veces se le llama **cola de prioridad**.
 
 ### 2.3 Operaciones básicas sobre grafos (4.2): BFS, DFS, camino más corto
 
@@ -280,6 +349,25 @@ class Grafo:
 - **Dijkstra**: responde "¿cuál es el camino de **menor costo total**?" cuando las aristas tienen peso — no es lo mismo que "menos saltos": un camino con 2 saltos puede costar más que uno con 4 saltos si las distancias son grandes.
 
 ### 2.4 Ejecución real: una red de ciudades (grafo no dirigido con peso)
+
+Así se ve la red que vamos a construir (el número en cada conexión es la distancia en km):
+
+```
+          Durango
+          /     \
+       265        310
+        /           \
+   Torreon       Mazatlan
+      |              |
+     270            215
+      |              |
+  Saltillo       Culiacan
+      |              |
+      85            900
+      |              |
+       \            /
+        Monterrey
+```
 
 ```python
 red = Grafo(dirigido=False)
