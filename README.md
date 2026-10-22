@@ -8,6 +8,7 @@ Continuación directa de la [Unidad 3](../estructura_de_datos_u3/README.md): ah�
 
 ## Contenido
 
+- [01_induccion_arboles_grafos.md](01_induccion_arboles_grafos.md) — Inducción sin clases: árbol como diccionario anidado, grafo como diccionario de listas, ejercicios guiados de recorrido/conteo/detección de ciclo antes de la implementación formal
 - [02_practica_arboles_grafos.md](02_practica_arboles_grafos.md) — Práctica guiada paso a paso: 4.1 clasificación de árboles, operaciones básicas sobre árboles binarios (insertar/buscar/recorridos inorden-preorden-postorden), aplicaciones de árboles · 4.2 representación de grafos (lista de adyacencia), operaciones básicas (BFS, DFS, Dijkstra), aplicaciones de grafos
 
 ## Nota sobre el código
