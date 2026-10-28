@@ -34,18 +34,46 @@ Nunca hay vuelta atrás.           (Durango-Torreon-Saltillo-...-Durango).
 
 ## Parte 1 — Árboles binarios
 
-### 1.1 Por qué un árbol y no una lista
+### 1.1 Elementos de un árbol
+
+Antes de clasificar árboles o programarlos, estos son los nombres que vas a usar todo el tiempo — tanto en este documento como en el examen:
+
+- **Nodo**: cada elemento del árbol. Guarda un valor y, en un árbol binario, hasta dos referencias (a su hijo izquierdo y a su hijo derecho).
+- **Raíz**: el único nodo que no tiene padre — el punto de entrada a todo el árbol (en el organigrama, el director general).
+- **Padre**: el nodo inmediatamente arriba de otro. Cada nodo tiene exactamente un padre, excepto la raíz, que no tiene ninguno.
+- **Hijo**: un nodo inmediatamente abajo de otro. En un árbol binario, cada nodo tiene como máximo 2 hijos (izquierdo y derecho).
+- **Hermanos**: dos nodos que comparten el mismo padre.
+- **Hoja**: un nodo sin hijos — el final de una rama.
+- **Nodo interno**: cualquier nodo que no es hoja (tiene al menos un hijo).
+- **Arista** (o rama): la conexión entre un padre y un hijo.
+- **Subárbol**: cualquier nodo del árbol, junto con todos sus descendientes, visto como un árbol completo por sí mismo. Por eso la definición recursiva de árbol funciona: "un árbol es un nodo con dos subárboles (izquierdo y derecho), cada uno a su vez un árbol".
+- **Nivel** (o profundidad): cuántas aristas hay que recorrer desde la raíz hasta ese nodo. La raíz está en el nivel 0.
+- **Altura**: el nivel más profundo que alcanza el árbol — es decir, la distancia (en aristas) de la raíz a la hoja más lejana. Un árbol con un solo nodo tiene altura 0; un árbol vacío, por convención, altura -1 (así lo calcula la función `altura()` que vas a programar en la sección 1.3).
+- **Grado de un nodo**: cuántos hijos tiene. En un árbol binario, el grado de cualquier nodo es 0, 1 o 2.
+- **Ancestro / descendiente**: todo nodo en el camino de la raíz hasta un nodo dado es su ancestro; todo nodo "debajo" de uno dado es su descendiente.
+
+```
+                 Director           ← Raíz (nivel 0)
+                /        \
+          Gerente       Gerente     ← nivel 1, hijos de Director, hermanos entre sí
+          /     \            \
+       Emp.    Emp.          Emp.   ← nivel 2, hojas (sin hijos)
+```
+
+En este dibujo: "Director" es la raíz y tiene grado 2; los dos "Gerente" son hijos de Director y hermanos entre sí; las tres "Emp." son hojas; la altura del árbol es 2 (hay que bajar 2 aristas desde la raíz hasta la hoja más lejana); el subárbol del "Gerente" de la derecha es él mismo junto con su único "Emp." — un árbol de 2 nodos dentro del árbol grande.
+
+### 1.2 Por qué un árbol y no una lista
 
 Si guardas datos ordenados en una lista y buscas un valor, en el peor caso revisas **todos** los elementos (`O(n)`). Un árbol binario de búsqueda bien construido reduce eso a `O(log n)`: en cada paso descartas la mitad de lo que queda, igual que buscar una palabra en un diccionario físico.
 
-### 1.2 Clasificación de árboles (4.1)
+### 1.3 Clasificación de árboles (4.1)
 
 - **Árbol binario**: cada nodo tiene como máximo 2 hijos (izquierdo y derecho).
 - **Árbol binario de búsqueda (ABB / BST)**: además, todo valor a la izquierda de un nodo es menor, y todo valor a la derecha es mayor o igual. Esto es lo que habilita la búsqueda rápida.
 - **Árbol balanceado**: la altura del lado izquierdo y derecho de cada nodo difiere poco (idealmente ≤1). Garantiza que la búsqueda realmente sea `O(log n)`.
 - **Árbol degenerado**: cada nodo tiene un solo hijo — en la práctica es una lista ligada disfrazada de árbol, y pierdes toda la ventaja de velocidad (lo vas a comprobar abajo con números reales).
 
-### 1.3 Operaciones básicas sobre árboles binarios (4.1)
+### 1.4 Operaciones básicas sobre árboles binarios (4.1)
 
 Construimos un Árbol Binario de Búsqueda con las operaciones fundamentales: **insertar**, **buscar**, y los tres **recorridos** clásicos (inorden, preorden, postorden).
 
@@ -147,7 +175,7 @@ class ArbolBinarioBusqueda:
 - **Preorden** (nodo → izquierda → derecha): entrega primero la raíz. Se usa para **copiar/serializar** un árbol (reconstruir el mismo árbol desde la lista preorden).
 - **Postorden** (izquierda → derecha → nodo): entrega la raíz al final. Se usa cuando necesitas procesar los hijos antes que el padre, por ejemplo **borrar un árbol de memoria** o evaluar una expresión matemática representada como árbol.
 
-### 1.4 Ejecución real: insertar, recorrer, y comparar un árbol balanceado contra uno degenerado
+### 1.5 Ejecución real: insertar, recorrer, y comparar un árbol balanceado contra uno degenerado
 
 ```python
 valores = [50, 30, 70, 20, 40, 60, 80, 10]
@@ -242,7 +270,7 @@ entre la raíz y cualquier hoja.    un solo hijo — es una lista ligada
                                    con forma de árbol.
 ```
 
-### 1.5 Aplicaciones de árboles (4.1)
+### 1.6 Aplicaciones de árboles (4.1)
 
 - **Sistemas de archivos**: carpetas y subcarpetas son, literalmente, un árbol (ya lo viste de forma real en la Unidad 5 de Sistemas Operativos, con inodos).
 - **Árboles de decisión**: cada nodo es una pregunta, cada rama una respuesta — base de algoritmos de clasificación en Machine Learning.
