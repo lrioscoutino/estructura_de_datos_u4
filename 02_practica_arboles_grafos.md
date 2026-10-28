@@ -278,6 +278,17 @@ entre la raíz y cualquier hoja.    un solo hijo — es una lista ligada
 - **Árboles de expresiones**: una expresión como `(3 + 5) * 2` se representa como árbol, y el **postorden** la evalúa directamente.
 - **Organigramas**: ya construiste uno en la Unidad 2 (recursividad) — un organigrama *es* un árbol general (no binario, porque un jefe puede tener más de 2 subordinados).
 
+### 1.7 Implementaciones reales en tecnología actual
+
+No son ejemplos de libro de texto — son árboles corriendo en producción, hoy, en herramientas que ya usas:
+
+- **Git**: cada commit no apunta directo a tus archivos, apunta a un **árbol de objetos "tree"**: una carpeta es un `tree` que contiene referencias a otros `tree` (subcarpetas) y a `blob` (contenido de archivo). Cuando corres `git commit`, Git recorre tu proyecto con la misma lógica recursiva que programaste en la Parte 1 — "yo soy una carpeta, mi contenido es lo mío más lo de mis subcarpetas" — y por eso dos commits que comparten la mayoría de sus archivos reutilizan los mismos nodos `tree` sin duplicarlos.
+- **El DOM del navegador**: cada página web que abres se representa internamente como un árbol — `<html>` es la raíz, `<body>` y `<head>` son sus hijos, cada `<div>` un nodo con sus propios hijos. Cuando JavaScript hace `document.querySelector()` o cuando el navegador "pinta" la página, está recorriendo este árbol. React usa una copia de este árbol (el "Virtual DOM" / React Fiber) para calcular el mínimo de cambios necesarios antes de tocar el DOM real — una optimización que depende directamente de poder comparar dos árboles rápido.
+- **Compiladores e intérpretes**: cuando escribes código, antes de ejecutarlo se convierte en un **Árbol de Sintaxis Abstracta (AST)** — `(3 + 5) * 2` se vuelve un árbol de operaciones, exactamente como viste en la sección 1.6. Python, V8 (el motor de JavaScript de Chrome) y cualquier compilador moderno recorren ese árbol para generar el código final o interpretarlo nodo por nodo.
+- **Autocompletado y corrector ortográfico**: un **Trie** (árbol de prefijos) guarda palabras letra por letra compartiendo el camino común — "casa" y "caso" comparten las primeras 3 letras en el mismo camino del árbol. Es la estructura detrás del autocompletado de tu teclado y de la búsqueda por prefijo en bases de código (ej. VS Code buscando símbolos).
+- **Blockchain — Árboles de Merkle**: Bitcoin y Ethereum no guardan todas las transacciones de un bloque en una lista plana; las organizan en un árbol binario donde cada nodo es el hash de sus dos hijos, hasta llegar a un único hash raíz ("Merkle root"). Esto permite verificar que una transacción específica pertenece a un bloque revisando solo `O(log n)` hashes en vez de descargar el bloque completo — la misma ventaja de velocidad que ya comprobaste con el ABB en la sección 1.5, aplicada a criptografía.
+- **Inteligencia artificial — árboles de búsqueda de juego**: motores de ajedrez (Stockfish) y el algoritmo que usó AlphaGo exploran un **árbol de jugadas posibles** (minimax con poda alfa-beta) — cada nodo es un estado del tablero, cada hijo una jugada posible desde ahí.
+
 ---
 
 ## Parte 2 — Grafos
@@ -461,6 +472,15 @@ El DFS siguió el orden correcto de dependencias. Este patrón (grafo dirigido +
 - **Redes de computadoras**: dispositivos = vértices, enlaces = aristas → encontrar la mejor ruta para un paquete de datos.
 - **Gestión de dependencias** (paquetes `npm`/`pip`, tareas de un proyecto): grafo dirigido donde un ciclo significa un error de diseño (dependencia circular).
 - **Motores de recomendación**: productos/usuarios conectados por "compró junto con" — se recorre el grafo para sugerir productos relacionados.
+
+### 2.7 Implementaciones reales en tecnología actual
+
+- **Google Maps / Waze**: el grafo de calles no tiene pesos fijos — se recalculan en tiempo real con datos de tráfico de millones de teléfonos, y el algoritmo real no es Dijkstra puro sino variantes como **A\*** (Dijkstra + una estimación de qué tan cerca está el destino, para explorar menos nodos) y **Contraction Hierarchies**, que precomputan "atajos" entre intersecciones importantes para responder rutas de miles de km en milisegundos.
+- **El "Social Graph" de Meta/Facebook**: toda la plataforma se modela como un grafo gigantesco — usuarios, páginas, grupos, publicaciones, todo son vértices, y "le gusta", "sigue", "es amigo de" son aristas. Internamente usan un sistema propio llamado **TAO** (The Associations and Objects) construido específicamente para servir consultas de grafo a la escala de miles de millones de nodos, algo que una base de datos relacional normal no puede hacer eficientemente.
+- **Bases de datos de grafos (Neo4j, Amazon Neptune)**: a diferencia de PostgreSQL (donde relacionar tablas requiere `JOIN`s costosos), estas bases de datos guardan los datos *como* un grafo desde el disco — cada "salto" entre nodos conectados es `O(1)` en vez de un `JOIN`. Se usan para detección de fraude bancario (encontrar anillos de cuentas conectadas sospechosamente) y para sistemas de recomendación en tiempo real.
+- **Grafos de conocimiento (Knowledge Graphs)**: el panel de información que aparece a la derecha cuando buscas algo en Google ("Google Knowledge Graph") es un grafo gigante donde los nodos son entidades del mundo real (personas, lugares, conceptos) y las aristas son sus relaciones ("nació en", "dirigió la película"). Wikidata es la versión abierta y pública de esta misma idea.
+- **Grafos de cómputo en Inteligencia Artificial**: cuando entrenas una red neuronal con TensorFlow o PyTorch, el modelo completo se representa internamente como un **grafo dirigido de operaciones** (cada capa es un nodo, los datos fluyen por las aristas). El entrenamiento (`backpropagation`) literalmente recorre ese grafo al revés, de la salida hacia la entrada, calculando gradientes — un recorrido de grafo con nombre propio en el mundo del Machine Learning.
+- **Internet mismo**: el protocolo de enrutamiento **BGP** que conecta a todos los proveedores de internet del mundo modela routers y redes como un grafo dirigido con pesos, y cada router corre su propia versión de un algoritmo de camino más corto (similar a Dijkstra) para decidir por dónde reenviar cada paquete que recibe.
 
 ---
 
