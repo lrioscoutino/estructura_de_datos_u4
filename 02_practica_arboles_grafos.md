@@ -314,7 +314,58 @@ No son ejemplos de libro de texto — son árboles corriendo en producción, hoy
 
 Un árbol no permite ciclos ni que un nodo tenga más de un "padre". Pero el mundo real sí tiene eso: una ciudad conectada por carretera a varias otras, cuentas de usuario que se siguen mutuamente, páginas web que se enlazan entre sí formando ciclos. Para eso existe el **grafo**: un conjunto de **vértices** (nodos) conectados por **aristas** (conexiones), sin la restricción jerárquica del árbol.
 
-### 2.2 Representación de grafos (4.2)
+### 2.2 Componentes de un grafo
+
+Igual que hiciste con los árboles en la sección 1.1, antes de clasificar o programar grafos conviene fijar el vocabulario:
+
+- **Vértice** (o nodo): cada elemento del grafo. En el mapa de ciudades, cada ciudad es un vértice.
+- **Arista** (o arco): la conexión entre dos vértices. En el mapa, cada carretera es una arista.
+- **Adyacencia**: dos vértices son adyacentes si existe una arista directa entre ellos — son "vecinos".
+- **Grado de un vértice**: cuántas aristas le llegan o salen. En un grafo **dirigido** se divide en **grado de entrada** (aristas que llegan) y **grado de salida** (aristas que salen); en uno **no dirigido** es solo un número.
+- **Peso**: el valor asociado a una arista (distancia, costo, tiempo). Si no se especifica, se asume que todas las aristas "cuestan" lo mismo.
+- **Camino**: una secuencia de vértices donde cada uno está conectado al siguiente por una arista. `Durango → Torreón → Saltillo` es un camino.
+- **Ciclo**: un camino que empieza y termina en el mismo vértice sin repetir aristas en medio (por ejemplo, Durango → Torreón → Saltillo → Monterrey → Culiacán → Mazatlán → Durango).
+- **Componente conexo**: un subconjunto de vértices donde todos son alcanzables entre sí por algún camino. Un grafo puede tener varios "pedazos" separados — cada pedazo es un componente conexo.
+- **Subgrafo**: un grafo más pequeño formado con algunos de los vértices y aristas del grafo original (lo mismo que un subárbol, pero sin la restricción jerárquica).
+
+```
+   Durango --265km-- Torreon
+      \                 |
+      310km            270km
+        \                |
+      Mazatlan        Saltillo
+          \               |
+         215km           85km
+            \              |
+          Culiacan------900km------Monterrey
+
+Vértices: 6 ciudades.  Aristas: 6 carreteras (cada una con peso = distancia).
+Grado de Durango = 2 (se conecta con Torreón y Mazatlán).
+Durango-Torreon-Saltillo-Monterrey-Culiacan-Mazatlan-Durango = un ciclo (vuelve al inicio).
+Todo el mapa es UN SOLO componente conexo: desde cualquier ciudad llegas a cualquier otra.
+```
+
+### 2.3 Tipos de grafos
+
+- **Dirigido vs. no dirigido**: en un grafo **dirigido**, cada arista tiene un sentido único (seguir a alguien en redes sociales no implica que te sigan de vuelta). En uno **no dirigido**, la conexión funciona en ambos sentidos (una carretera se recorre de ida y vuelta). Ya programaste los dos con el parámetro `dirigido` de la clase `Grafo`.
+- **Ponderado vs. no ponderado**: **ponderado** cuando sus aristas tienen peso (la red de ciudades, con distancias en km); **no ponderado** cuando todas las conexiones valen lo mismo (quién sigue a quién en redes sociales, sin medir "qué tan fuerte" es esa conexión).
+- **Cíclico vs. acíclico**: **cíclico** si existe al menos un camino que regresa a su punto de partida (el mapa de ciudades lo es). **Acíclico** si eso es imposible — el caso más importante es el **DAG** (grafo dirigido acíclico), que ya viste en acción en `03_practica_git.md`: el historial de Git nunca puede "regresar" a un commit anterior.
+- **Conexo vs. no conexo**: **conexo** si hay un camino entre cualquier par de vértices (como la red de ciudades completa). **No conexo** si el grafo se divide en dos o más componentes conexos sin ninguna arista que los una — por ejemplo, dos redes sociales distintas que nunca se han conectado entre sí.
+- **Simple vs. multigrafo**: un grafo **simple** permite como máximo una arista entre cada par de vértices y ninguna arista de un vértice a sí mismo. Un **multigrafo** permite varias aristas paralelas entre el mismo par (por ejemplo, dos vuelos distintos entre las mismas dos ciudades, cada uno con su propio horario y precio).
+- **Completo**: todo vértice está conectado directamente con todos los demás. Un grupo de chat donde todos pueden escribirle a todos directamente es un grafo completo.
+- **Bipartito**: los vértices se pueden separar en dos grupos, de forma que las aristas **solo** conectan vértices de un grupo con vértices del otro grupo (nunca dentro del mismo grupo). Ejemplo real: una app de freelancers, donde un grupo son "clientes" y el otro "trabajadores", y las aristas son contrataciones — nunca hay una arista cliente-cliente ni trabajador-trabajador.
+
+| Tipo | Ejemplo de esta práctica / de la vida real |
+|---|---|
+| Dirigido | `dependencias` (sección 2.6) — instalar Docker antes de desplegar |
+| No dirigido | `red` de ciudades (sección 2.5) — carreteras de ida y vuelta |
+| Ponderado | La misma `red` de ciudades — cada arista tiene distancia en km |
+| No ponderado | Un grafo de "quién sigue a quién" sin medir intensidad |
+| Acíclico (DAG) | El historial de commits de Git (`03_practica_git.md`) |
+| Cíclico | La red de ciudades — puedes volver a Durango dando la vuelta |
+| Bipartito | Clientes↔trabajadores en una app de freelancers |
+
+### 2.4 Representación de grafos (4.2)
 
 Hay dos formas estándar de representar un grafo en memoria:
 
@@ -356,7 +407,7 @@ Dijkstra, abajo, usa `import heapq`. Un **heap** (montículo) es una estructura 
 
 ¿Para qué le sirve a Dijkstra? El algoritmo necesita, en cada paso, visitar la ciudad **más cercana que todavía no ha explorado** — sin un heap tendrías que revisar manualmente todas las distancias pendientes cada vez (lento); con un heap, pedirlo es instantáneo. Es la misma idea que una cola, pero en vez de "el que llegó primero" (FIFO), es "el que tiene el valor más chico" — por eso a veces se le llama **cola de prioridad**.
 
-### 2.3 Operaciones básicas sobre grafos (4.2): BFS, DFS, camino más corto
+### 2.5 Operaciones básicas sobre grafos (4.2): BFS, DFS, camino más corto
 
 ```python
     def bfs(self, inicio):
@@ -420,7 +471,7 @@ Dijkstra, abajo, usa `import heapq`. Un **heap** (montículo) es una estructura 
 - **DFS (recorrido por profundidad)**: usa recursión, que internamente es una **pila** (otra estructura de la Unidad 3) — se mete lo más hondo posible antes de retroceder. Responde "¿existe algún camino?" y se usa para detectar ciclos.
 - **Dijkstra**: responde "¿cuál es el camino de **menor costo total**?" cuando las aristas tienen peso — no es lo mismo que "menos saltos": un camino con 2 saltos puede costar más que uno con 4 saltos si las distancias son grandes.
 
-### 2.4 Ejecución real: una red de ciudades (grafo no dirigido con peso)
+### 2.6 Ejecución real: una red de ciudades (grafo no dirigido con peso)
 
 Así se ve la red que vamos a construir (el número en cada conexión es la distancia en km):
 
@@ -476,7 +527,7 @@ DFS desde Durango: ['Durango', 'Torreon', 'Saltillo', 'Monterrey', 'Culiacan', '
 
 Nota algo importante: BFS y DFS visitan los vértices en **orden distinto** (ambos son válidos, dependen del orden en que se exploran los vecinos), pero Dijkstra te da el dato que de verdad importa en una app de mapas: la ruta Durango→Monterrey por **Saltillo cuesta 620 km**, aunque pasando por Culiacán también "hay camino" (lo confirmó `hay_camino`), ese camino es mucho más largo (525 + 900 = 1425 km). BFS/DFS solo contestan *si existe* un camino; Dijkstra contesta *cuál es el mejor*.
 
-### 2.5 Ejecución real: grafo dirigido (dependencias de despliegue)
+### 2.7 Ejecución real: grafo dirigido (dependencias de despliegue)
 
 Un caso donde la dirección de la arista importa: no puedes desplegar una app antes de instalar Docker.
 
@@ -498,7 +549,7 @@ DFS desde instalar_ubuntu: ['instalar_ubuntu', 'configurar_red', 'instalar_docke
 
 El DFS siguió el orden correcto de dependencias. Este patrón (grafo dirigido + recorrido) es exactamente cómo herramientas reales como `make`, Docker Compose o un pipeline de CI deciden en qué orden ejecutar pasos que dependen unos de otros.
 
-### 2.6 Aplicaciones de grafos (4.2)
+### 2.8 Aplicaciones de grafos (4.2)
 
 - **Mapas y GPS**: ciudades/intersecciones = vértices, calles = aristas con peso (distancia o tiempo) → Dijkstra o A*.
 - **Redes sociales**: usuarios = vértices, "sigue a" = arista dirigida. BFS calcula "amigos en común" o "grados de separación".
@@ -506,7 +557,7 @@ El DFS siguió el orden correcto de dependencias. Este patrón (grafo dirigido +
 - **Gestión de dependencias** (paquetes `npm`/`pip`, tareas de un proyecto): grafo dirigido donde un ciclo significa un error de diseño (dependencia circular).
 - **Motores de recomendación**: productos/usuarios conectados por "compró junto con" — se recorre el grafo para sugerir productos relacionados.
 
-### 2.7 Implementaciones reales en tecnología actual
+### 2.9 Implementaciones reales en tecnología actual
 
 - **Google Maps / Waze**: el grafo de calles no tiene pesos fijos — se recalculan en tiempo real con datos de tráfico de millones de teléfonos, y el algoritmo real no es Dijkstra puro sino variantes como **A\*** (Dijkstra + una estimación de qué tan cerca está el destino, para explorar menos nodos) y **Contraction Hierarchies**, que precomputan "atajos" entre intersecciones importantes para responder rutas de miles de km en milisegundos.
 - **El "Social Graph" de Meta/Facebook**: toda la plataforma se modela como un grafo gigantesco — usuarios, páginas, grupos, publicaciones, todo son vértices, y "le gusta", "sigue", "es amigo de" son aristas. Internamente usan un sistema propio llamado **TAO** (The Associations and Objects) construido específicamente para servir consultas de grafo a la escala de miles de millones de nodos, algo que una base de datos relacional normal no puede hacer eficientemente.
