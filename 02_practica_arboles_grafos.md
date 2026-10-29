@@ -81,17 +81,21 @@ Construimos un Árbol Binario de Búsqueda con las operaciones fundamentales: **
 class Nodo:
     def __init__(self, valor):
         self.valor = valor
-        self.izq = None
-        self.der = None
+        self.izq = None   # referencia al hijo izquierdo (o None si no tiene)
+        self.der = None   # referencia al hijo derecho (o None si no tiene)
 
 class ArbolBinarioBusqueda:
     def __init__(self):
-        self.raiz = None
+        self.raiz = None  # árbol vacío: ningún nodo todavía
 
     def insertar(self, valor):
+        # Caso base: árbol vacío → el nuevo valor se vuelve la raíz.
         if self.raiz is None:
             self.raiz = Nodo(valor)
             return
+        # Recorremos desde la raíz comparando contra cada nodo: si el valor
+        # es menor nos movemos a la izquierda, si no a la derecha, hasta
+        # encontrar un hueco (None) donde colgar el nuevo nodo.
         actual = self.raiz
         while True:
             if valor < actual.valor:
@@ -106,6 +110,9 @@ class ArbolBinarioBusqueda:
                 actual = actual.der
 
     def buscar(self, valor):
+        # Misma lógica de comparación que insertar(), pero sin crear nodos:
+        # en cada paso descartamos la mitad del árbol que no puede contener
+        # el valor buscado. Cuenta los pasos para medir qué tan rápido fue.
         actual = self.raiz
         pasos = 0
         while actual is not None:
@@ -116,6 +123,8 @@ class ArbolBinarioBusqueda:
         return False, pasos
 
     def inorden(self, nodo=None, resultado=None):
+        # izquierda → nodo → derecha. En un ABB esto siempre entrega los
+        # valores ordenados de menor a mayor (ver explicación abajo).
         if resultado is None:
             resultado = []
             nodo = self.raiz
@@ -126,6 +135,8 @@ class ArbolBinarioBusqueda:
         return resultado
 
     def preorden(self, nodo=None, resultado=None):
+        # nodo → izquierda → derecha. Visita primero la raíz, útil para
+        # copiar/serializar el árbol (se puede reconstruir desde esta lista).
         if resultado is None:
             resultado = []
             nodo = self.raiz
@@ -136,6 +147,8 @@ class ArbolBinarioBusqueda:
         return resultado
 
     def postorden(self, nodo=None, resultado=None):
+        # izquierda → derecha → nodo. Visita la raíz al final, útil cuando
+        # hay que procesar los hijos antes que el padre (borrar, evaluar).
         if resultado is None:
             resultado = []
             nodo = self.raiz
@@ -146,6 +159,8 @@ class ArbolBinarioBusqueda:
         return resultado
 
     def altura(self, nodo="__raiz__"):
+        # Altura = 1 + la altura del hijo más profundo. Árbol vacío = -1,
+        # para que un nodo solo (sin hijos) salga en 1 + max(-1,-1) = 0.
         if nodo == "__raiz__":
             nodo = self.raiz
         if nodo is None:
@@ -153,6 +168,8 @@ class ArbolBinarioBusqueda:
         return 1 + max(self.altura(nodo.izq), self.altura(nodo.der))
 
     def nivel_por_nivel(self):
+        # Recorrido por anchura (BFS) sobre el árbol: se procesa un nivel
+        # completo (una "cola" de nodos) antes de pasar al siguiente nivel.
         if self.raiz is None:
             return []
         niveles = []
@@ -312,15 +329,19 @@ from collections import deque
 class Grafo:
     def __init__(self, dirigido=False):
         self.dirigido = dirigido
-        self.lista_adyacencia = {}
+        self.lista_adyacencia = {}  # vértice -> lista de (vecino, peso)
 
     def agregar_vertice(self, v):
+        # setdefault evita borrar vecinos ya existentes si el vértice
+        # ya estaba en el diccionario.
         self.lista_adyacencia.setdefault(v, [])
 
     def agregar_arista(self, u, v, peso=1):
         self.agregar_vertice(u)
         self.agregar_vertice(v)
         self.lista_adyacencia[u].append((v, peso))
+        # Si NO es dirigido, la conexión también se registra al revés
+        # (v -> u), porque se puede recorrer en ambos sentidos.
         if not self.dirigido:
             self.lista_adyacencia[v].append((u, peso))
 ```
@@ -339,19 +360,27 @@ Dijkstra, abajo, usa `import heapq`. Un **heap** (montículo) es una estructura 
 
 ```python
     def bfs(self, inicio):
+        # Recorrido por ANCHURA: usa una cola (deque, FIFO). Se visita el
+        # vértice inicial, se encolan sus vecinos, y se procesa la cola en
+        # el mismo orden en que entraron — por eso avanza "nivel por nivel"
+        # y encuentra el camino con menos saltos.
         visitados = {inicio}
         orden = []
         cola = deque([inicio])
         while cola:
-            actual = cola.popleft()
+            actual = cola.popleft()          # saca el más antiguo en la cola
             orden.append(actual)
             for vecino, _ in self.lista_adyacencia[actual]:
                 if vecino not in visitados:
-                    visitados.add(vecino)
+                    visitados.add(vecino)    # marcar antes de encolar evita duplicados
                     cola.append(vecino)
         return orden
 
     def dfs(self, inicio):
+        # Recorrido por PROFUNDIDAD: usa recursión (que internamente es una
+        # pila de llamadas). Se mete lo más hondo posible por un vecino
+        # antes de regresar a explorar los demás — por eso "se hunde" en
+        # una rama completa antes de probar otra.
         visitados = set()
         orden = []
         def recorrer(v):
@@ -359,26 +388,30 @@ Dijkstra, abajo, usa `import heapq`. Un **heap** (montículo) es una estructura 
             orden.append(v)
             for vecino, _ in self.lista_adyacencia[v]:
                 if vecino not in visitados:
-                    recorrer(vecino)
+                    recorrer(vecino)          # baja un nivel más antes de seguir con los demás vecinos
         recorrer(inicio)
         return orden
 
     def hay_camino(self, origen, destino):
+        # Reutiliza BFS: si destino aparece en el recorrido desde origen,
+        # es alcanzable. No importa BFS o DFS para esta pregunta.
         return destino in self.bfs(origen)
 
     def dijkstra(self, inicio):
+        # Camino MÁS CORTO (menor costo total) con pesos. Usa un heap (cola
+        # de prioridad) para siempre sacar el vértice pendiente más cercano.
         import heapq
         distancias = {v: float('inf') for v in self.lista_adyacencia}
         distancias[inicio] = 0
         heap = [(0, inicio)]
         while heap:
-            dist_actual, actual = heapq.heappop(heap)
+            dist_actual, actual = heapq.heappop(heap)   # el más cercano pendiente
             if dist_actual > distancias[actual]:
-                continue
+                continue   # ya existe una ruta mejor registrada; esta entrada quedó obsoleta
             for vecino, peso in self.lista_adyacencia[actual]:
                 nueva = dist_actual + peso
                 if nueva < distancias[vecino]:
-                    distancias[vecino] = nueva
+                    distancias[vecino] = nueva          # se encontró una ruta más corta
                     heapq.heappush(heap, (nueva, vecino))
         return distancias
 ```
