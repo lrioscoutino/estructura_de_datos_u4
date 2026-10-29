@@ -10,10 +10,11 @@ Continuación directa de la [Unidad 3](../estructura_de_datos_u3/README.md): ah�
 
 - [01_induccion_arboles_grafos.md](01_induccion_arboles_grafos.md) — Inducción sin clases: árbol como diccionario anidado, grafo como diccionario de listas, ejercicios guiados de recorrido/conteo/detección de ciclo antes de la implementación formal
 - [02_practica_arboles_grafos.md](02_practica_arboles_grafos.md) — Práctica guiada paso a paso: 4.1 clasificación de árboles, operaciones básicas sobre árboles binarios (insertar/buscar/recorridos inorden-preorden-postorden), aplicaciones de árboles · 4.2 representación de grafos (lista de adyacencia), operaciones básicas (BFS, DFS, Dijkstra), aplicaciones de grafos
+- [03_practica_git.md](03_practica_git.md) — Práctica guiada paso a paso para quien nunca ha usado Git: el historial de commits como grafo dirigido acíclico (DAG) — commits, ramas, merges (commit con dos padres), y el árbol de objetos que vive dentro de cada commit
 
 ## Nota sobre el código
 
-Todo el código de esta práctica es Python real, verificado ejecutándolo antes de publicarse — ninguna salida mostrada en el documento está inventada.
+Todo el código de esta práctica es Python real, verificado ejecutándolo antes de publicarse — ninguna salida mostrada en el documento está inventada. Los comandos de Git de 03_practica_git.md se ejecutaron en un repositorio real creado para esta práctica.
 
 ## Unidad anterior / siguiente
 
